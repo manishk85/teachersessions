@@ -1,0 +1,158 @@
+{
+  "info": {
+    "name": "Session Booking API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "userId", "value": "" },
+    { "key": "teacherId", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "dateTimestamp", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Create User",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": ["pm.collectionVariables.set('randomNum', Date.now());"]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 201', () => pm.response.to.have.status(201));",
+              "const res = pm.response.json();",
+              "if (res.data) pm.collectionVariables.set('userId', res.data._id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Rahul Sharma\",\n  \"email\": \"rahul{{randomNum}}@example.com\",\n  \"phone\": \"9876543210\"\n}"
+        },
+        "url": "{{baseUrl}}/users"
+      }
+    },
+    {
+      "name": "Create Teacher",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 201', () => pm.response.to.have.status(201));",
+              "const res = pm.response.json();",
+              "if (res.data) pm.collectionVariables.set('teacherId', res.data._id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Anita Verma\",\n  \"email\": \"anita@example.com\",\n  \"specialization\": \"Mathematics\",\n  \"experience\": 5\n}"
+        },
+        "url": "{{baseUrl}}/teachers"
+      }
+    },
+    {
+      "name": "Create Session",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// session for tomorrow 10:00 - 11:00 UTC",
+              "const start = new Date();",
+              "start.setUTCDate(start.getUTCDate() + 1);",
+              "start.setUTCHours(10, 0, 0, 0);",
+              "const end = new Date(start.getTime() + 60 * 60 * 1000);",
+              "pm.collectionVariables.set('startTime', start.toISOString());",
+              "pm.collectionVariables.set('endTime', end.toISOString());",
+              "pm.collectionVariables.set('dateTimestamp', start.getTime());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 201', () => pm.response.to.have.status(201));",
+              "const res = pm.response.json();",
+              "if (res.data) pm.collectionVariables.set('sessionId', res.data._id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"teacherId\": \"{{teacherId}}\",\n  \"startTime\": \"{{startTime}}\",\n  \"endTime\": \"{{endTime}}\"\n}"
+        },
+        "url": "{{baseUrl}}/sessions"
+      }
+    },
+    {
+      "name": "Get Available Sessions",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/sessions/available?dateTimestamp={{dateTimestamp}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["sessions", "available"],
+          "query": [{ "key": "dateTimestamp", "value": "{{dateTimestamp}}" }]
+        }
+      }
+    },
+    {
+      "name": "Book Session",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": \"{{userId}}\"\n}"
+        },
+        "url": "{{baseUrl}}/sessions/{{sessionId}}/book"
+      }
+    },
+    {
+      "name": "Get User Sessions (before complete)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/users/{{userId}}/sessions"
+      }
+    },
+    {
+      "name": "Mark Session Complete",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/sessions/{{sessionId}}/complete"
+      }
+    },
+    {
+      "name": "Get User Sessions (after complete)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/users/{{userId}}/sessions"
+      }
+    }
+  ]
+}
